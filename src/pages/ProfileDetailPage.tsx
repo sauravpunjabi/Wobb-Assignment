@@ -147,7 +147,6 @@ export function ProfileDetailPage() {
           )}
 
           {/* TODO: candidates must implement Add to List feature */}
-          {/* TODO: candidates must implement Add to List feature */}
           <button
             disabled
             className="block mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed"
