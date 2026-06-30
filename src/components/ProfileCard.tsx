@@ -1,17 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import type { Platform, UserProfileSummary } from "@/types";
 import { getProfileHandle, getProfileIdentifier } from "@/utils/dataHelpers";
+import { formatCompactNumber } from "@/utils/formatters";
 import { VerifiedBadge } from "./VerifiedBadge";
 
 interface ProfileCardProps {
   profile: UserProfileSummary;
   platform: Platform;
-}
-
-function formatFollowersLocal(count: number) {
-  if (count >= 1000000) return (count / 1000000).toFixed(1) + "M followers";
-  if (count >= 1000) return (count / 1000).toFixed(0) + "K followers";
-  return count + " followers";
 }
 
 export function ProfileCard({ profile, platform }: ProfileCardProps) {
@@ -34,7 +29,9 @@ export function ProfileCard({ profile, platform }: ProfileCardProps) {
           <VerifiedBadge verified={profile.is_verified} />
         </div>
         <div className="text-sm text-gray-600">{profile.fullname}</div>
-        <div className="text-sm">{formatFollowersLocal(profile.followers)}</div>
+        <div className="text-sm">
+          {formatCompactNumber(profile.followers)} followers
+        </div>
       </div>
       {/* TODO: candidates must implement Add to List feature */}
       <button
