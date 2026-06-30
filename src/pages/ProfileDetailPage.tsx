@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
+import { ShortlistButton } from "@/components/ShortlistButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import type { FullUserProfile } from "@/types";
 import { findProfile, getProfileHandle } from "@/utils/dataHelpers";
@@ -16,10 +17,12 @@ export function ProfileDetailPage() {
 
   // The search summary is resolved from data (not router state) so the page
   // works on refresh and direct navigation.
-  const summary = useMemo(
+  const found = useMemo(
     () => findProfile(identifier, platform),
     [identifier, platform]
   );
+  const summary = found?.profile;
+  const resolvedPlatform = found?.platform;
   const [detail, setDetail] = useState<FullUserProfile | null>(null);
   const [status, setStatus] = useState<Status>("loading");
 
@@ -175,13 +178,11 @@ export function ProfileDetailPage() {
             </a>
           )}
 
-          {/* TODO: candidates must implement Add to List feature */}
-          <button
-            disabled
-            className="block mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed"
-          >
-            Add to List
-          </button>
+          {summary && resolvedPlatform && (
+            <div className="mt-4">
+              <ShortlistButton profile={summary} platform={resolvedPlatform} />
+            </div>
+          )}
         </div>
       </div>
     </Layout>

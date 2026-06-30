@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import type { Platform, UserProfileSummary } from "@/types";
 import { getProfileHandle, getProfileIdentifier } from "@/utils/dataHelpers";
 import { formatCompactNumber } from "@/utils/formatters";
+import { ShortlistButton } from "./ShortlistButton";
 import { VerifiedBadge } from "./VerifiedBadge";
 
 interface ProfileCardProps {
@@ -33,14 +34,7 @@ export function ProfileCard({ profile, platform }: ProfileCardProps) {
           {formatCompactNumber(profile.followers)} followers
         </div>
       </div>
-      {/* TODO: candidates must implement Add to List feature */}
-      <button
-        disabled
-        className="px-3 py-1 bg-gray-300 text-gray-500 text-sm rounded cursor-not-allowed"
-        onClick={(e) => e.stopPropagation()}
-      >
-        Add to List
-      </button>
+      <ShortlistButton profile={profile} platform={platform} />
     </div>
   );
 }

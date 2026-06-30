@@ -68,7 +68,7 @@ export function getPlatformLabel(platform: Platform): string {
 export function findProfile(
   identifier: string | undefined,
   platform?: string | null
-): UserProfileSummary | undefined {
+): { profile: UserProfileSummary; platform: Platform } | undefined {
   if (!identifier) return undefined;
   const platformsToSearch =
     platform && PLATFORMS.includes(platform as Platform)
@@ -78,7 +78,7 @@ export function findProfile(
     const match = extractProfiles(p).find(
       (profile) => getProfileIdentifier(profile) === identifier
     );
-    if (match) return match;
+    if (match) return { profile: match, platform: p };
   }
   return undefined;
 }
