@@ -1,60 +1,93 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import type { FullUserProfile, ProfileDetailResponse } from "@/types";
+import type { FullUserProfile } from "@/types";
+import { findProfile, getProfileHandle } from "@/utils/dataHelpers";
 import { formatCompactNumber, formatEngagementRate } from "@/utils/formatters";
-import { loadProfileByUsername } from "@/utils/profileLoader";
+import { loadProfileDetail } from "@/utils/profileLoader";
+
+type Status = "loading" | "ready" | "not-found";
 
 export function ProfileDetailPage() {
-  const { username } = useParams<{ username: string }>();
+  const { username: identifier } = useParams<{ username: string }>();
   const [searchParams] = useSearchParams();
-  const platform = searchParams.get("platform") || "unknown";
-  const [profileData, setProfileData] = useState<ProfileDetailResponse | null>(
-    null
+  const platform = searchParams.get("platform");
+
+  // The search summary is resolved from data (not router state) so the page
+  // works on refresh and direct navigation.
+  const summary = useMemo(
+    () => findProfile(identifier, platform),
+    [identifier, platform]
   );
-  const [loaded, setLoaded] = useState(false);
+  const [detail, setDetail] = useState<FullUserProfile | null>(null);
+  const [status, setStatus] = useState<Status>("loading");
 
   useEffect(() => {
-    if (!username) return;
+    let cancelled = false;
 
-    loadProfileByUsername(username).then((data) => {
-      setProfileData(data);
-      setLoaded(true);
-    });
-  }, [username]);
+    async function load() {
+      setStatus("loading");
+      let detailProfile: FullUserProfile | null = null;
 
-  if (!username) {
+      if (identifier) {
+        try {
+          detailProfile = await loadProfileDetail(identifier);
+        } catch {
+          detailProfile = null;
+        }
+      }
+
+      if (cancelled) return;
+      setDetail(detailProfile);
+      setStatus(detailProfile || summary ? "ready" : "not-found");
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [identifier, summary]);
+
+  // The search summary is authoritative for card-visible identity/core fields,
+  // so the numbers match what the user clicked. The detail JSON only supplies
+  // the richer fields it uniquely provides.
+  const user = useMemo<FullUserProfile | null>(() => {
+    if (detail && summary) {
+      return {
+        ...detail,
+        fullname: summary.fullname,
+        username: summary.username,
+        handle: summary.handle,
+        custom_name: summary.custom_name,
+        picture: summary.picture,
+        followers: summary.followers,
+        is_verified: summary.is_verified,
+        engagement_rate: summary.engagement_rate,
+        engagements: summary.engagements,
+      };
+    }
+    return detail ?? summary ?? null;
+  }, [detail, summary]);
+
+  if (status === "loading") {
     return (
-      <Layout>
-        <p>Invalid profile</p>
-        <Link to="/">Back</Link>
-      </Layout>
-    );
-  }
-
-  if (!loaded) {
-    return (
-      <Layout title={`@${username}`}>
+      <Layout title={identifier ? `@${identifier}` : undefined}>
         <p className="text-gray-400">Loading...</p>
       </Layout>
     );
   }
 
-  if (!profileData) {
+  if (status === "not-found" || !user) {
     return (
-      <Layout title={`@${username}`}>
-        <p className="text-red-600 mb-4">
-          Could not load profile details for {username}
-        </p>
+      <Layout title={identifier ? `@${identifier}` : undefined}>
+        <p className="text-red-600 mb-4">Could not find this profile.</p>
         <Link to="/" className="text-blue-600 underline">
           Back to search
         </Link>
       </Layout>
     );
   }
-
-  const user: FullUserProfile = profileData.data.user_profile;
 
   return (
     <Layout title={user.fullname}>
@@ -69,11 +102,13 @@ export function ProfileDetailPage() {
         />
         <div className="flex-1">
           <h2 className="text-xl font-bold">
-            @{user.username}
+            @{getProfileHandle(user)}
             <VerifiedBadge verified={user.is_verified} />
           </h2>
           <p className="text-gray-600">{user.fullname}</p>
-          <p className="text-xs text-gray-400 mt-1">Platform: {platform}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Platform: {platform ?? "unknown"}
+          </p>
 
           {user.description && (
             <p className="mt-3 text-sm text-gray-700">{user.description}</p>

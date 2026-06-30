@@ -58,3 +58,27 @@ export function getPlatformLabel(platform: Platform): string {
   if (platform === "youtube") return "YouTube";
   return "TikTok";
 }
+
+/**
+ * Find a profile's search summary by the identifier used in its route.
+ * Tries the given platform first; if it is missing or invalid, scans all
+ * platforms. Matches using the same getProfileIdentifier used to build URLs,
+ * so the lookup round-trips and works on refresh / direct navigation.
+ */
+export function findProfile(
+  identifier: string | undefined,
+  platform?: string | null
+): UserProfileSummary | undefined {
+  if (!identifier) return undefined;
+  const platformsToSearch =
+    platform && PLATFORMS.includes(platform as Platform)
+      ? [platform as Platform]
+      : PLATFORMS;
+  for (const p of platformsToSearch) {
+    const match = extractProfiles(p).find(
+      (profile) => getProfileIdentifier(profile) === identifier
+    );
+    if (match) return match;
+  }
+  return undefined;
+}
