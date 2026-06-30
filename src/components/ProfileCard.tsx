@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { Platform, UserProfileSummary } from "@/types";
+import { getProfileHandle, getProfileIdentifier } from "@/utils/dataHelpers";
 import { VerifiedBadge } from "./VerifiedBadge";
 
 interface ProfileCardProps {
@@ -22,10 +23,11 @@ export function ProfileCard({
   onProfileClick,
 }: ProfileCardProps) {
   const navigate = useNavigate();
+  const identifier = getProfileIdentifier(profile);
 
   const handleClick = () => {
-    if (onProfileClick) onProfileClick(profile.username);
-    navigate(`/profile/${profile.username}?platform=${platform}`);
+    if (onProfileClick) onProfileClick(identifier);
+    navigate(`/profile/${identifier}?platform=${platform}`);
   };
 
   return (
@@ -37,7 +39,7 @@ export function ProfileCard({
       <img src={profile.picture} className="w-12 h-12 rounded-full" />
       <div className="text-left flex-1">
         <div className="font-bold">
-          @{profile.username}
+          @{getProfileHandle(profile)}
           <VerifiedBadge verified={profile.is_verified} />
         </div>
         <div className="text-sm text-gray-600">{profile.fullname}</div>

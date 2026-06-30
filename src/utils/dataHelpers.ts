@@ -18,16 +18,37 @@ export function extractProfiles(platform: Platform): UserProfileSummary[] {
   return data.accounts.map((item) => item.account.user_profile);
 }
 
+/** A human-facing handle for the profile (caller prepends "@" if wanted). */
+export function getProfileHandle(profile: UserProfileSummary): string {
+  return (
+    profile.username ??
+    profile.handle ??
+    profile.custom_name ??
+    profile.fullname
+  );
+}
+
+/** A stable identifier for routing and detail lookups. */
+export function getProfileIdentifier(profile: UserProfileSummary): string {
+  return (
+    profile.username ??
+    profile.handle ??
+    profile.custom_name ??
+    profile.user_id
+  );
+}
+
 export function filterProfiles(
   profiles: UserProfileSummary[],
   query: string
 ): UserProfileSummary[] {
-  if (!query) return profiles;
-  return profiles.filter((p) => {
-    const matchUsername = p.username.includes(query);
-    const matchFullname = p.fullname.toLowerCase().includes(query.toLowerCase());
-    return matchUsername || matchFullname;
-  });
+  const q = query.trim().toLowerCase();
+  if (!q) return profiles;
+  return profiles.filter((p) =>
+    [p.username, p.handle, p.custom_name, p.fullname].some((field) =>
+      field?.toLowerCase().includes(q)
+    )
+  );
 }
 
 export const PLATFORMS: Platform[] = ["instagram", "youtube", "tiktok"];
