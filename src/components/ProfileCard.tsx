@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Platform, UserProfileSummary } from "@/types";
 import { getProfileHandle, getProfileIdentifier } from "@/utils/dataHelpers";
@@ -10,7 +11,10 @@ interface ProfileCardProps {
   platform: Platform;
 }
 
-export function ProfileCard({ profile, platform }: ProfileCardProps) {
+export const ProfileCard = memo(function ProfileCard({
+  profile,
+  platform,
+}: ProfileCardProps) {
   const navigate = useNavigate();
   const identifier = getProfileIdentifier(profile);
 
@@ -37,4 +41,4 @@ export function ProfileCard({ profile, platform }: ProfileCardProps) {
       <ShortlistButton profile={profile} platform={platform} />
     </div>
   );
-}
+});
