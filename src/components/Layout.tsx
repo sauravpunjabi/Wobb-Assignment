@@ -39,7 +39,7 @@ export function Layout({ children, title }: LayoutProps) {
 
       <footer className="mt-12 border-t border-[var(--border)] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 px-4 font-meta text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)] sm:flex-row sm:items-center sm:px-6">
-          <span>Wobb — Creator Directory / 2026</span>
+          <span>Influencer Search / 2026</span>
           <span>Search · Shortlist · Ship</span>
         </div>
       </footer>
