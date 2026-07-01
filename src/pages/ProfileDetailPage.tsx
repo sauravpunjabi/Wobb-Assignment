@@ -146,9 +146,9 @@ export function ProfileDetailPage() {
 
   return (
     <Layout>
-      {/* Back Button */}
+      {/* Back Button — return to the platform tab the user came from */}
       <Link
-        to="/"
+        to={`/?platform=${resolvedPlatform ?? platform ?? "instagram"}`}
         className="inline-flex items-center gap-1.5 text-xs font-meta font-extrabold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6 cursor-pointer"
       >
         <ArrowLeft size={12} /> Back to index

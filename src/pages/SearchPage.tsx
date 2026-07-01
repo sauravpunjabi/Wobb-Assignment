@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { Platform } from "@/types";
 import { Layout } from "@/components/Layout";
 import { PlatformFilter } from "@/components/PlatformFilter";
 import { ProfileList } from "@/components/ProfileList";
 import {
+  PLATFORMS,
   extractProfiles,
   filterProfiles,
   getPlatformLabel,
@@ -12,8 +14,26 @@ import {
 const HEADLINE = ["Find", "the", "right", "creator."];
 
 export function SearchPage() {
-  const [platform, setPlatform] = useState<Platform>("instagram");
+  // Keep the active platform in the URL so it survives navigating into a
+  // profile and back — the tab you were on is restored, not reset to default.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const platformParam = searchParams.get("platform");
+  const platform: Platform = PLATFORMS.includes(platformParam as Platform)
+    ? (platformParam as Platform)
+    : "instagram";
+
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handlePlatformChange = (next: Platform) => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        params.set("platform", next);
+        return params;
+      },
+      { replace: true }
+    );
+  };
 
   const allProfiles = useMemo(() => extractProfiles(platform), [platform]);
   const filtered = useMemo(
@@ -46,7 +66,7 @@ export function SearchPage() {
       <div className="mt-8">
         <PlatformFilter
           selected={platform}
-          onChange={setPlatform}
+          onChange={handlePlatformChange}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
