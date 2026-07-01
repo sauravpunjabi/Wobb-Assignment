@@ -8,7 +8,7 @@ This repo is my submission for the Wobb "Vibe Coder" frontend take‑home. It
 started from the provided buggy starter; I fixed the bugs, added the shortlist
 feature, rebuilt the UI, and tightened the code.
 
-- **Live demo:** _add Vercel URL here after deploy_
+- **Live demo:** https://influencer-search-three.vercel.app/
 - **Stack:** React 19 · TypeScript · Vite 8 · Tailwind CSS v4 · Zustand · React Router 7 · Framer Motion · Lucide React
 
 ---
