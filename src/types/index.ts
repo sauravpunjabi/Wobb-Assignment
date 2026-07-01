@@ -44,6 +44,18 @@ export interface SearchData {
   accounts: SearchAccount[];
 }
 
+export interface Hashtag {
+  tag: string;
+  weight: number;
+}
+
+export interface StatHistoryItem {
+  month: string;
+  followers: number;
+  following?: number;
+  avg_likes?: number;
+}
+
 /**
  * Extended profile loaded from the per-profile detail JSON files.
  * Only the fields the UI consumes are modelled explicitly; the source
@@ -61,6 +73,8 @@ export interface FullUserProfile extends UserProfileSummary {
   avg_reels_plays?: number;
   gender?: string;
   age_group?: string;
+  top_hashtags?: Hashtag[];
+  stat_history?: StatHistoryItem[];
 }
 
 export interface ProfileDetailResponse {

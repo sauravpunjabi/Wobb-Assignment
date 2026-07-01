@@ -21,11 +21,11 @@ export function ShortlistButton({ profile, platform }: ShortlistButtonProps) {
         e.stopPropagation();
         toggle(profile, platform);
       }}
-      className={
+      className={`px-3 py-1.5 text-[10px] font-meta font-extrabold uppercase tracking-wider rounded-sm border transition-all duration-200 cursor-pointer ${
         shortlisted
-          ? "px-3 py-1 text-sm rounded border border-green-600 text-green-700 bg-green-50 hover:bg-green-100"
-          : "px-3 py-1 text-sm rounded border border-gray-400 text-gray-800 hover:bg-gray-100"
-      }
+          ? "border-[var(--accent-alt)] bg-[var(--accent-alt-soft)] text-[var(--accent-alt)]"
+          : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--text)] hover:text-[var(--text)] active:scale-[0.96]"
+      }`}
     >
       {shortlisted ? "Added ✓" : "Add to List"}
     </button>

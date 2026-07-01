@@ -28,6 +28,15 @@ export function getProfileHandle(profile: UserProfileSummary): string {
   );
 }
 
+/** Two-letter monogram from a name (avatar fallback when a photo fails). */
+export function getInitials(name: string): string {
+  // Split on any non-alphanumeric run so "T-Series" -> "TS", "khaby.lame" -> "KL".
+  const words = name.split(/[^A-Za-z0-9]+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return name.trim().slice(0, 2).toUpperCase();
+}
+
 /** A stable identifier for routing and detail lookups. */
 export function getProfileIdentifier(profile: UserProfileSummary): string {
   return (
