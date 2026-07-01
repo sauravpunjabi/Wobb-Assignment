@@ -1,4 +1,4 @@
-# Wobb — Creator Directory
+# Influencer Search
 
 A small influencer‑discovery app: search creators across Instagram, YouTube and
 TikTok, open a detailed profile, and build a **shortlist** that survives a page
