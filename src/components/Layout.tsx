@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { useShortlistStore } from "@/store/shortlistStore";
 import { ShortlistDrawer } from "./ShortlistDrawer";
@@ -16,14 +15,7 @@ export function Layout({ children, title }: LayoutProps) {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--text)]">
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg)]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link
-            to="/"
-            className="font-meta text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
-          >
-            <span className="text-[var(--text)]">Wobb</span> / Creator Directory
-          </Link>
-
+        <div className="mx-auto flex max-w-6xl items-center justify-end gap-4 px-4 py-4 sm:px-6">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}

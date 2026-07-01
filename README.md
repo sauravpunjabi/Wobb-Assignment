@@ -1,80 +1,198 @@
-# Wobb Frontend Assignment
+# Wobb — Creator Directory
 
-A starter influencer search application built with **React**, **TypeScript**, **Vite**, and **Tailwind CSS**. This project is intentionally left in a rough-but-working state for candidates to improve.
+A small influencer‑discovery app: search creators across Instagram, YouTube and
+TikTok, open a detailed profile, and build a **shortlist** that survives a page
+refresh.
 
-## Getting Started
+This repo is my submission for the Wobb "Vibe Coder" frontend take‑home. It
+started from the provided buggy starter; I fixed the bugs, added the shortlist
+feature, rebuilt the UI, and tightened the code.
+
+- **Live demo:** _add Vercel URL here after deploy_
+- **Stack:** React 19 · TypeScript · Vite 8 · Tailwind CSS v4 · Zustand · React Router 7 · Framer Motion · Lucide React
+
+---
+
+## Getting started
 
 ```bash
 npm install
-npm run dev
+npm run dev      # start the dev server
+npm run build    # type-check (tsc -b) + production build — must pass
+npm run lint     # eslint
+npm run preview  # preview the production build
 ```
 
-Open [http://localhost:5173](http://localhost:5173) to view the app.
+Requires Node 18+.
 
-## What's Included
+---
 
-- **Search / Dashboard** — filter influencers by platform (Instagram, YouTube, TikTok) and search by username or full name
-- **Profile Details** — click a profile to view extended data loaded from individual JSON files
-- **Routing** — `react-router-dom` with `/` (search) and `/profile/:username` (details)
+## What I changed (at a glance)
 
-Sample data lives in:
+1. **Fixed the intentional bugs** — including two that crash to a blank screen
+   (see below).
+2. **Built the shortlist feature** in **Zustand** with `localStorage`
+   persistence (add, de‑duplicate, view, remove, clear — survives refresh).
+3. **Redesigned the UI/UX** into a responsive, accessible editorial layout.
+4. **Improved code quality** — real types, consolidated helpers, removed dead
+   code and debug leftovers, graceful loading/empty/error states.
+5. **Optimised performance** — memoised derived data, memoised list items, and
+   lazy‑loaded per‑profile detail JSON (loaded only when a profile is opened).
 
-- `src/assets/data/search/` — platform search results (10 profiles each)
-- `src/assets/data/profiles/` — detailed profile JSON per username
+---
 
-## How to Submit
+## Libraries added
 
-1. **Download or clone** this starter project to your machine.
-2. **Create a new repository** on your own GitHub account. Do not fork the original assignment repo — push your work to a repo you own.
-3. Complete the tasks below and push your changes to that repository.
-4. **Share the public GitHub repository URL** with us as your submission.
+- **Zustand** — the app's single global store; holds the shortlist and uses the
+  `persist` middleware for `localStorage`.
+- **Framer Motion** — small UI transitions (headline reveal, card hover, list
+  enter/exit, shortlist "pop"), all gated behind `prefers-reduced-motion`.
+- **Lucide React** — lightweight, tree‑shakeable icons for UI actions.
 
-### Deadline (strict)
+---
 
-- **Due:** **2 July 2026, 2:00 PM IST** (Indian Standard Time, UTC+5:30)
-- **Any git commits made after this deadline will disqualify your submission.** We will only consider the repository state as of the deadline; late commits will not be reviewed.
-- Make sure your final work is pushed **before** the cutoff.
+## Bugs fixed
 
-## AI Usage
+**Crashes / broken core behaviour**
+- **Blank screen when searching YouTube** — filtering called `.includes()` on
+  `username`, but several YouTube channels have no `username` (only `handle` /
+  `custom_name`), throwing and unmounting the app. Filtering is now
+  undefined‑safe, trimmed, case‑insensitive, and matches
+  username/handle/custom_name/fullname.
+- **Dead‑end profile pages** — only 6 of 30 profiles ship a detail JSON file, so
+  every other profile errored out. The detail page now **falls back to the
+  search summary** it already has, so every profile opens.
+- **`npm install` failed** — an unused, React‑19‑incompatible dependency
+  (`react-beautiful-dnd`) was removed.
 
-You may use any AI tools (Cursor, ChatGPT, Claude, GitHub Copilot, etc.). We are evaluating your final solution and engineering decisions.
+**Wrong data / formatting**
+- Engagement rate was multiplied by **10000** (showing e.g. `125.51%` instead of
+  `1.26%`); now uses the correct `×100` formatter.
+- The "Engagements" stat rendered the *rate* instead of the *count*.
+- Card and detail page showed **different follower numbers** for the same
+  creator (two data snapshots). The card summary is now the single source of
+  truth for shared fields; the detail file only supplies fields it uniquely has.
+- Three inconsistent follower formatters consolidated into one
+  `Intl.NumberFormat` compact formatter.
 
-## Your Tasks
+**Accessibility / security**
+- Added `alt` handling on all images and an **initials‑monogram fallback** for
+  broken image URLs.
+- Cards are now real, keyboard‑focusable links (stretched `<Link>`), not
+  click‑only `<div>`s.
+- External links use `rel="noopener noreferrer"`.
 
-Complete the following as part of your submission:
+**Robustness / quality**
+- Types now model the real data (`username` optional; added `handle`,
+  `custom_name`, `account_type`, etc.).
+- Profile loader wrapped in try/catch with a `loading | ready | not-found`
+  status (no more infinite spinner on failure).
+- Added a **404 catch‑all route** and a real page `<title>` + meta description.
+- Removed debug code (`console.log`, `clickCount`, `data-search`), a duplicated
+  TODO, and a dead unused component.
+- Search query is trimmed (a whitespace‑only query no longer "matches nothing").
 
-1. **Find and fix all bugs and quality issues** — the codebase contains intentional bugs and quality issues. Identify and resolve them.
+**Layout / performance**
+- Removed the hard‑coded `700px` card width and the fixed `1126px` centered app
+  shell — the layout is now fluid and responsive.
+- `extractProfiles` / `filterProfiles` are memoised; `ProfileCard` is
+  `React.memo`’d.
 
-2. **Completely redesign the UI/UX** — replace the basic layout with a polished, modern interface. Focus on usability, visual hierarchy, and delight.
+---
 
-3. **Replace React Context with Zustand** — when you implement state management for the selected list, use [Zustand](https://github.com/pmndrs/zustand) instead of React Context.
+## The shortlist feature
 
-4. **Implement "Select profile & Add to List"** — the disabled "Add to List" button is a stub. Build the full feature:
-   - Select / add profiles to a persistent list
-   - View and manage the selected list
-   - Handle duplicates appropriately
+State lives in a single **Zustand** store (`src/store/shortlistStore.ts`) wrapped
+in the `persist` middleware (`localStorage` key `wobb-shortlist`).
 
-5. **Improve code quality and project structure** — refactor as needed, add proper types, and follow React best practices.
+- **Add / remove** from anywhere via a toggle button (cards + detail page).
+- **De‑duplication** uses a composite id `` `${platform}:${user_id}` `` so the
+  same creator can't be added twice, and the same person on two platforms is
+  treated as distinct.
+- **View / manage** in a slide‑out drawer (list, remove one, clear all, empty
+  state) opened from the header, which shows a live count badge.
+- **Persists across refresh** — verified: add → reload → still there → remove →
+  reload → clear.
 
-6. **Optimize performance** — apply sensible optimizations where appropriate.
+> **Note on "replace Context with Zustand":** the starter shipped no React
+> Context or global state at all, so there was nothing to replace. I introduced
+> Zustand as the app's single global store — which is the state‑management
+> approach the brief asked for.
 
-7. **Use any libraries you need** — you are not limited to the current stack. Choose tools that help you deliver a great result (UI kits, state managers, testing libraries, etc.).
+---
 
-## Scripts
+## Design approach
 
-| Command        | Description              |
-| -------------- | ------------------------ |
-| `npm run dev`  | Start development server |
-| `npm run build`| Production build         |
-| `npm run lint` | Run ESLint               |
+The redesign focuses on a clean **editorial dashboard** experience — stronger
+visual hierarchy, responsive profile cards, clearer shortlist actions, better
+fallback states, and improved readability across screen sizes. Key choices:
 
-## Submission Notes
+- **Type:** Bricolage Grotesque (display) · Space Grotesk (body/UI) · JetBrains
+  Mono (labels & metrics) — distinctive, non‑generic.
+- **Palette:** alabaster canvas, charcoal ink, **solid forest‑green + terracotta**
+  accents (no gradients). Light theme only.
+- **Motion:** staggered headline reveal, card hover‑lift, list enter/exit and a
+  shortlist "pop" (Framer Motion), all respecting `prefers-reduced-motion`.
+- **Detail page:** stat cards, a hand‑built SVG **follower‑growth chart** with an
+  interactive tooltip, and a **topic‑tags** section (for profiles that have that
+  data).
 
-- Document any assumptions or trade-offs in your README
-- Ensure `npm run build` passes before submitting
-- Focus on demonstrating your judgment — not every possible feature needs to be built, but the core assignment items should be addressed thoughtfully
-- Double-check that your repo is public (or that we have access) and that the link is included in your submission
-- Please make meaningful commits throughout your work. We may review your commit history.
-- **Bonus:** Deploying the app (e.g. Vercel, Netlify, GitHub Pages) is optional but will be considered a plus — include the live URL in your submission if you do
+Design tokens are CSS variables in `src/index.css`; base element rules live in
+`@layer base` so Tailwind utilities always win (this fixed an invisible
+ink‑on‑ink button).
 
-Good luck!
+---
+
+## Accessibility & performance
+
+- Keyboard‑navigable cards and controls, visible `:focus-visible` rings,
+  `aria-label` / `aria-pressed` on interactive elements, `role="dialog"` +
+  Escape‑to‑close drawer, labelled search input, `prefers-reduced-motion` honored.
+- No horizontal overflow at 375px; cards reflow to a single column.
+- Per‑profile detail JSON is lazy‑loaded via `import.meta.glob`, so each detail
+  file is its own code‑split chunk instead of bloating the main bundle.
+
+---
+
+## Assumptions & trade‑offs
+
+- **Only 6 of 30 profiles have deep data.** The dataset ships detail JSON
+  (posts, follower history, top topics) for just 6 creators; the rest only have
+  summary metrics. Rather than fabricate numbers, summary‑only profiles show
+  their real metrics plus a small "limited dataset" note.
+- **Several image URLs are dead.** Some avatar URLs (notably a few YouTube
+  channels) return 404 or are hotlink‑blocked. These fall back to a clean
+  initials monogram; I chose not to edit the provided data to swap them.
+- **No search debounce.** The dataset is tiny and in‑memory, so filtering on
+  each keystroke is instant; a debounce would add complexity for no gain.
+- **Light theme only.** A dark mode was prototyped then removed to keep the
+  visual language focused.
+
+---
+
+## Possible improvements
+
+- Deploy to Vercel and add the live link above.
+- Unit tests for the shortlist store (add / dedupe / remove / persist).
+- A formal accessibility audit (colour‑contrast / tab‑order).
+- Fetch fresh avatar URLs (or proxy them) to recover the broken images.
+
+---
+
+## Project structure
+
+```
+src/
+  components/   Layout, ProfileCard, ProfileList, PlatformFilter, Avatar,
+                ShortlistButton, ShortlistDrawer, VerifiedBadge
+  pages/        SearchPage, ProfileDetailPage, NotFound
+  store/        shortlistStore (Zustand + persist)
+  utils/        dataHelpers, formatters, profileLoader
+  types/        shared TypeScript types
+  assets/data/  search/*.json (summaries) + profiles/*.json (details)
+```
+
+---
+
+_Built with assistance from AI tools, as permitted by the brief. I reviewed,
+tested, and made the final implementation decisions._
