@@ -92,9 +92,12 @@ Requires Node 18+.
   TODO, and a dead unused component.
 - Search query is trimmed (a whitespace‑only query no longer "matches nothing").
 
-**Layout / performance**
+**Layout / navigation / performance**
 - Removed the hard‑coded `700px` card width and the fixed `1126px` centered app
   shell — the layout is now fluid and responsive.
+- The selected **platform tab is stored in the URL** (`?platform=`), so it's
+  restored when you open a profile and hit back (previously it reset to
+  Instagram); the search view is also shareable/bookmarkable.
 - `extractProfiles` / `filterProfiles` are memoised; `ProfileCard` is
   `React.memo`’d.
 
