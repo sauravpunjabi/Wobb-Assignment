@@ -10,6 +10,7 @@ import type { FullUserProfile, StatHistoryItem, Platform } from "@/types";
 import { findProfile, getProfileHandle, getPlatformLabel } from "@/utils/dataHelpers";
 import { formatCompactNumber, formatEngagementRate } from "@/utils/formatters";
 import { loadProfileDetail } from "@/utils/profileLoader";
+import { estimateProfileStats } from "@/utils/estimates";
 
 type Status = "loading" | "ready" | "not-found";
 
@@ -144,6 +145,21 @@ export function ProfileDetailPage() {
       (user.top_hashtags && user.top_hashtags.length > 0)
   );
 
+  // Summary-only profiles: model the missing analytics from the profile's
+  // real summary metrics, and flag every modeled figure as "est." in the UI.
+  const usingEstimates = !hasDeepData;
+  const estimates = usingEstimates ? estimateProfileStats(user) : null;
+  const avgLikes = user.avg_likes ?? estimates?.avg_likes;
+  const avgComments = user.avg_comments ?? estimates?.avg_comments;
+  const avgViews =
+    user.avg_views !== undefined && user.avg_views > 0
+      ? user.avg_views
+      : undefined;
+  const history =
+    user.stat_history && user.stat_history.length > 1
+      ? user.stat_history
+      : estimates?.stat_history;
+
   return (
     <Layout>
       {/* Back Button — return to the platform tab the user came from */}
@@ -161,6 +177,8 @@ export function ProfileDetailPage() {
             <Avatar
               src={user.picture}
               name={user.fullname}
+              platform={resolvedPlatform}
+              handle={getProfileHandle(user)}
               className="mx-auto h-28 w-28"
               textClassName="text-4xl"
             />
@@ -182,8 +200,8 @@ export function ProfileDetailPage() {
             </div>
 
             {user.description && (
-              <p className="text-xs text-[var(--text-muted)] italic leading-relaxed pt-2 border-t border-[var(--border)] text-left px-2">
-                "{user.description}"
+              <p className="font-editorial text-sm text-[var(--text-muted)] leading-relaxed pt-2 border-t border-[var(--border)] text-left px-2">
+                “{user.description}”
               </p>
             )}
 
@@ -250,7 +268,7 @@ export function ProfileDetailPage() {
                 <span className="text-[10px] font-meta font-bold uppercase tracking-widest text-[var(--text-muted)]">
                   {stat.label}
                 </span>
-                <p className="text-2xl font-extrabold font-display mt-1">
+                <p className="text-2xl font-extrabold font-display mt-1 tabular-nums">
                   {stat.value}
                 </p>
               </div>
@@ -258,44 +276,46 @@ export function ProfileDetailPage() {
           </div>
 
           {/* Secondary Stats Row */}
-          {(user.avg_likes !== undefined || user.avg_comments !== undefined || (user.avg_views !== undefined && user.avg_views > 0)) && (
+          {(avgLikes !== undefined || avgComments !== undefined || avgViews !== undefined) && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {user.avg_likes !== undefined && (
+              {avgLikes !== undefined && (
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded p-4 flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-meta font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                      Avg Likes
+                      Avg Likes{usingEstimates ? " (est.)" : ""}
                     </span>
-                    <p className="text-lg font-extrabold font-meta">
-                      {formatCompactNumber(user.avg_likes)}
+                    <p className="text-lg font-extrabold font-meta tabular-nums">
+                      {usingEstimates ? "≈" : ""}
+                      {formatCompactNumber(avgLikes)}
                     </p>
                   </div>
                   <Users className="text-[var(--text-muted)] opacity-25" size={24} />
                 </div>
               )}
 
-              {user.avg_comments !== undefined && (
+              {avgComments !== undefined && (
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded p-4 flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-meta font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                      Avg Comments
+                      Avg Comments{usingEstimates ? " (est.)" : ""}
                     </span>
-                    <p className="text-lg font-extrabold font-meta">
-                      {formatCompactNumber(user.avg_comments)}
+                    <p className="text-lg font-extrabold font-meta tabular-nums">
+                      {usingEstimates ? "≈" : ""}
+                      {formatCompactNumber(avgComments)}
                     </p>
                   </div>
                   <Calendar className="text-[var(--text-muted)] opacity-25" size={24} />
                 </div>
               )}
 
-              {user.avg_views !== undefined && user.avg_views > 0 && (
+              {avgViews !== undefined && (
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded p-4 flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-meta font-bold uppercase tracking-widest text-[var(--text-muted)]">
                       Avg Views
                     </span>
-                    <p className="text-lg font-extrabold font-meta">
-                      {formatCompactNumber(user.avg_views)}
+                    <p className="text-lg font-extrabold font-meta tabular-nums">
+                      {formatCompactNumber(avgViews)}
                     </p>
                   </div>
                   <Eye className="text-[var(--text-muted)] opacity-25" size={24} />
@@ -304,10 +324,10 @@ export function ProfileDetailPage() {
             </div>
           )}
 
-          {/* Growth chart section */}
-          {user.stat_history && user.stat_history.length > 1 && (
+          {/* Growth chart section — real history when available, modeled otherwise */}
+          {history && history.length > 1 && (
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded p-6 space-y-4">
-              <FollowerGrowthChart history={user.stat_history} />
+              <FollowerGrowthChart history={history} estimated={usingEstimates} />
             </div>
           )}
 
@@ -330,16 +350,16 @@ export function ProfileDetailPage() {
             </div>
           )}
 
-          {/* No deep analytics available for this creator in the dataset */}
-          {!hasDeepData && (
-            <div className="bg-[var(--surface)] border border-dashed border-[var(--border)] rounded p-8 text-center">
-              <p className="mb-2 font-meta text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                Limited dataset
-              </p>
-              <p className="mx-auto max-w-md text-sm leading-relaxed text-[var(--text-muted)]">
-                Deeper analytics — follower growth, top topics, and post-level
-                metrics — aren't available for this creator in the sample data.
-                The summary metrics above come from the platform search index.
+          {/* Modeled-data footnote for summary-only profiles */}
+          {usingEstimates && (
+            <div className="flex items-start gap-3 rounded border border-dashed border-[var(--border)] p-4">
+              <span className="mt-0.5 inline-flex shrink-0 rounded-sm bg-[var(--accent-alt-soft)] px-2 py-1 font-meta text-[9px] font-extrabold uppercase tracking-widest text-[var(--accent-alt)]">
+                ≈ est.
+              </span>
+              <p className="font-editorial text-sm leading-relaxed text-[var(--text-muted)]">
+                Deep analytics aren't in the sample dataset for this creator,
+                so figures marked "est." — growth trend and per-post averages —
+                are modeled from its real follower count and engagement rate.
               </p>
             </div>
           )}
@@ -350,7 +370,14 @@ export function ProfileDetailPage() {
 }
 
 /* Custom interactive SVG Growth Chart Component */
-function FollowerGrowthChart({ history }: { history: StatHistoryItem[] }) {
+function FollowerGrowthChart({
+  history,
+  estimated = false,
+}: {
+  history: StatHistoryItem[];
+  /** True when the series is modeled from summary metrics, not measured. */
+  estimated?: boolean;
+}) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Filter history to ensure values are correct
@@ -443,17 +470,25 @@ function FollowerGrowthChart({ history }: { history: StatHistoryItem[] }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <span className="text-[10px] font-meta font-bold uppercase tracking-widest text-[var(--text-muted)]">
-            Historical Growth
+            {estimated ? "Modeled Growth" : "Historical Growth"}
           </span>
-          <h4 className="text-base font-extrabold mt-0.5">Follower Growth Trend</h4>
+          <h4 className="text-base font-extrabold mt-0.5 flex items-center gap-2">
+            Follower Growth Trend
+            {estimated && (
+              <span className="inline-flex rounded-sm bg-[var(--accent-alt-soft)] px-1.5 py-0.5 font-meta text-[9px] font-extrabold uppercase tracking-widest text-[var(--accent-alt)]">
+                ≈ est.
+              </span>
+            )}
+          </h4>
         </div>
-        
+
         <div className="text-left sm:text-right">
-          <p className="text-sm font-extrabold font-meta text-[var(--accent)]">
-            +{formatCompactNumber(growthInfo.diff)} Followers
+          <p className="text-sm font-extrabold font-meta text-[var(--accent)] tabular-nums">
+            {estimated ? "≈" : ""}+{formatCompactNumber(growthInfo.diff)} Followers
           </p>
-          <p className="text-[10px] font-meta font-bold text-[var(--text-muted)] uppercase tracking-wider">
+          <p className="text-[10px] font-meta font-bold text-[var(--text-muted)] uppercase tracking-wider tabular-nums">
             +{growthInfo.percent.toFixed(2)}% over {growthInfo.duration} months
+            {estimated ? " (est.)" : ""}
           </p>
         </div>
       </div>
@@ -494,7 +529,7 @@ function FollowerGrowthChart({ history }: { history: StatHistoryItem[] }) {
             className="opacity-5"
           />
 
-          {/* Trend Line */}
+          {/* Trend Line — dashed when the series is modeled, solid when measured */}
           <path
             d={linePath}
             fill="none"
@@ -502,6 +537,7 @@ function FollowerGrowthChart({ history }: { history: StatHistoryItem[] }) {
             strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
+            strokeDasharray={estimated ? "7 6" : undefined}
           />
 
           {/* Vertical Hover Line */}

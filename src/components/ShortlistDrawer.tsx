@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2 } from "lucide-react";
@@ -22,7 +22,9 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
   const remove = useShortlistStore((state) => state.remove);
   const clear = useShortlistStore((state) => state.clear);
   const navigate = useNavigate();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Escape closes the drawer.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -31,6 +33,21 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  // Lock background scroll while the drawer is open.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
+  // Move focus into the dialog when it opens.
+  useEffect(() => {
+    if (open) closeButtonRef.current?.focus();
+  }, [open]);
 
   const openProfile = (item: ShortlistItem) => {
     const id = getProfileIdentifier(item.profile);
@@ -62,16 +79,17 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="relative w-full max-w-sm bg-[var(--surface)] border-l border-[var(--border)] shadow-2xl flex flex-col text-left z-10"
+            className="relative z-10 flex w-full max-w-sm flex-col border-l border-[var(--border)] bg-[var(--surface)] text-left shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
+            <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
               <div>
-                <span className="text-[10px] font-meta font-extrabold uppercase tracking-widest text-[var(--accent-alt)]">
-                  Selected Creators
+                <span className="font-meta text-[10px] font-extrabold uppercase tracking-widest text-[var(--accent-alt)]">
+                  Selected creators
                 </span>
-                <h2 className="text-lg font-extrabold mt-0.5">
-                  Shortlist ({items.length})
+                <h2 className="mt-0.5 text-lg font-extrabold">
+                  Shortlist{" "}
+                  <span className="tabular-nums">({items.length})</span>
                 </h2>
               </div>
               <div className="flex items-center gap-3">
@@ -79,7 +97,7 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
                   <button
                     type="button"
                     onClick={clear}
-                    className="flex items-center gap-1 text-xs font-meta font-semibold uppercase tracking-wider text-[var(--accent-alt)] hover:text-red-500 transition-colors cursor-pointer"
+                    className="flex cursor-pointer items-center gap-1 font-meta text-xs font-semibold uppercase tracking-wider text-[var(--accent-alt)] transition-colors hover:text-red-500"
                   >
                     <Trash2 size={12} />
                     <span>Clear</span>
@@ -87,9 +105,10 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
                 )}
                 <button
                   type="button"
+                  ref={closeButtonRef}
                   onClick={onClose}
                   aria-label="Close shortlist"
-                  className="flex h-7 w-7 items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-all duration-200 cursor-pointer"
+                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] transition-all duration-200 hover:bg-[var(--surface-2)]"
                 >
                   <X size={14} />
                 </button>
@@ -97,46 +116,53 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
             </div>
 
             {/* List Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="scroll-ledger flex-1 overflow-y-auto">
               {items.length === 0 ? (
-                <div className="p-8 text-center h-full flex flex-col justify-center items-center space-y-3">
-                  <div className="h-10 w-10 rounded bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] text-base">
+                <div className="flex h-full flex-col items-center justify-center space-y-3 p-8 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded border border-[var(--border)] bg-[var(--surface-2)] text-base text-[var(--text-muted)]">
                     ✦
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold">Your list is empty</p>
-                    <p className="text-xs text-[var(--text-muted)] max-w-[200px] mx-auto leading-relaxed">
-                      Add creators from the search page to compile your shortlist.
+                    <p className="mx-auto max-w-[220px] font-editorial text-sm leading-relaxed text-[var(--text-muted)]">
+                      Add creators from the index to start compiling your
+                      shortlist.
                     </p>
                   </div>
                 </div>
               ) : (
                 <ul className="divide-y divide-[var(--border)]">
                   <AnimatePresence>
-                    {items.map((item) => (
+                    {items.map((item, i) => (
                       <motion.li
                         key={item.id}
                         layout
                         exit={{ opacity: 0, x: 20 }}
-                        className="flex items-center gap-3.5 p-4 hover:bg-[var(--surface-2)] transition-colors duration-250 group"
+                        className="group flex items-center gap-3 p-4 transition-colors duration-250 hover:bg-[var(--surface-2)]"
                       >
+                        <span className="w-5 shrink-0 font-meta text-[10px] font-extrabold tracking-widest text-[var(--text-muted)] tabular-nums">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
                         <Avatar
                           src={item.profile.picture}
                           name={item.profile.fullname}
+                          platform={item.platform}
+                          handle={getProfileHandle(item.profile)}
                           className="h-10 w-10"
                           textClassName="text-xs"
                         />
                         <button
                           type="button"
                           onClick={() => openProfile(item)}
-                          className="flex-1 text-left min-w-0 cursor-pointer"
+                          className="min-w-0 flex-1 cursor-pointer text-left"
                         >
-                          <div className="font-extrabold text-sm truncate group-hover:text-[var(--accent-alt)] transition-colors">
+                          <div className="truncate text-sm font-extrabold transition-colors group-hover:text-[var(--accent-alt)]">
                             @{getProfileHandle(item.profile)}
                           </div>
-                          <div className="text-[10px] font-meta font-bold uppercase tracking-wider text-[var(--text-muted)] truncate mt-0.5">
+                          <div className="mt-0.5 truncate font-meta text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                             {getPlatformLabel(item.platform)} ·{" "}
-                            {formatCompactNumber(item.profile.followers)} followers
+                            {formatCompactNumber(item.profile.followers)}{" "}
+                            followers
                           </div>
                         </button>
                         <button
@@ -145,7 +171,7 @@ export function ShortlistDrawer({ open, onClose }: ShortlistDrawerProps) {
                           aria-label={`Remove ${getProfileHandle(
                             item.profile
                           )} from shortlist`}
-                          className="text-xs font-meta font-semibold uppercase tracking-wider text-[var(--text-muted)] hover:text-red-500 transition-colors cursor-pointer shrink-0"
+                          className="shrink-0 cursor-pointer font-meta text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] transition-colors hover:text-red-500"
                         >
                           Remove
                         </button>

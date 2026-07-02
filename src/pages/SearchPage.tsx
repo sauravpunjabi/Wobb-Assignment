@@ -11,7 +11,18 @@ import {
   getPlatformLabel,
 } from "@/utils/dataHelpers";
 
-const HEADLINE = ["Find", "the", "right", "creator."];
+// One italic-serif word inside the grotesque headline — the editorial accent.
+const HEADLINE: { word: string; accent?: boolean }[] = [
+  { word: "Find" },
+  { word: "the" },
+  { word: "right", accent: true },
+  { word: "creator." },
+];
+
+const TOTAL_CREATORS = PLATFORMS.reduce(
+  (total, platform) => total + extractProfiles(platform).length,
+  0
+);
 
 export function SearchPage() {
   // Keep the active platform in the URL so it survives navigating into a
@@ -43,27 +54,53 @@ export function SearchPage() {
 
   return (
     <Layout>
+      {/* Kicker — small mono index line flanked by hairline rules */}
+      <p className="mt-4 text-center font-meta text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--text-muted)]">
+        <span
+          className="headline-word inline-flex items-center gap-3"
+          style={{ animationDelay: "0s" }}
+        >
+          <span aria-hidden="true" className="h-px w-8 bg-[var(--text)]" />
+          Creator index · Vol. 01
+          <span aria-hidden="true" className="h-px w-8 bg-[var(--text)]" />
+        </span>
+      </p>
+
       {/* Hero — words stagger up on load */}
       <h1
-        aria-label={HEADLINE.join(" ")}
-        className="mt-3 font-display text-[clamp(48px,8vw,90px)] font-bold leading-[0.9] tracking-[-0.03em] text-center"
+        aria-label={HEADLINE.map((item) => item.word).join(" ")}
+        className="mt-4 text-center font-display text-[clamp(48px,8vw,90px)] font-bold leading-[0.9] tracking-[-0.03em]"
       >
-        {HEADLINE.map((word, i) => (
+        {HEADLINE.map((item, i) => (
           <span
-            key={word}
-            className="headline-word"
+            key={item.word}
+            className={`headline-word ${
+              item.accent
+                ? "font-editorial pr-[0.05em] font-medium tracking-normal text-[var(--accent-alt)]"
+                : ""
+            }`}
             style={{
-              animationDelay: `${i * 0.07}s`,
+              animationDelay: `${0.08 + i * 0.07}s`,
               marginRight: i < HEADLINE.length - 1 ? "0.22em" : undefined,
-              color: word === "right" ? "var(--text-muted)" : undefined,
             }}
           >
-            {word}
+            {item.word}
           </span>
         ))}
       </h1>
 
-      <div className="mt-8">
+      {/* Sub-line — editorial serif aside */}
+      <p className="mt-5 text-center">
+        <span
+          className="headline-word max-w-xl font-editorial text-lg text-[var(--text-muted)] sm:text-xl"
+          style={{ animationDelay: "0.44s" }}
+        >
+          {TOTAL_CREATORS} creators across Instagram, YouTube and TikTok —
+          indexed, searchable, one click from your shortlist.
+        </span>
+      </p>
+
+      <div className="mt-9">
         <PlatformFilter
           selected={platform}
           onChange={handlePlatformChange}
@@ -72,10 +109,13 @@ export function SearchPage() {
         />
       </div>
 
-      <p className="mt-3 font-meta text-[11px] tracking-[0.05em] text-[var(--text-muted)] text-center mb-6">
-        {filtered.length} shown / {allProfiles.length} indexed on{" "}
-        {getPlatformLabel(platform)}
-      </p>
+      {/* Ledger rule — section label left, live tally right */}
+      <div className="mt-10 mb-6 flex items-baseline justify-between gap-4 border-b border-[var(--text)] pb-2 font-meta text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+        <span>Index / {getPlatformLabel(platform)}</span>
+        <span aria-live="polite" className="tabular-nums">
+          {filtered.length} of {allProfiles.length} shown
+        </span>
+      </div>
 
       <ProfileList
         profiles={filtered}

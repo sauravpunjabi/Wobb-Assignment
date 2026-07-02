@@ -38,6 +38,10 @@ Requires Node 18+.
    code and debug leftovers, graceful loading/empty/error states.
 5. **Optimised performance** — memoised derived data, memoised list items, and
    lazy‑loaded per‑profile detail JSON (loaded only when a profile is opened).
+6. **Filled the dataset's gaps honestly** — summary‑only profiles now show
+   **clearly‑labeled estimated analytics** (`≈ est.`, dashed chart line)
+   modeled from their real metrics, and broken avatars are recovered via
+   **unavatar.io** before falling back to an initials monogram.
 
 ---
 
@@ -130,15 +134,26 @@ The redesign focuses on a clean **editorial dashboard** experience — stronger
 visual hierarchy, responsive profile cards, clearer shortlist actions, better
 fallback states, and improved readability across screen sizes. Key choices:
 
-- **Type:** Bricolage Grotesque (display) · Space Grotesk (body/UI) · JetBrains
-  Mono (labels & metrics) — distinctive, non‑generic.
-- **Palette:** alabaster canvas, charcoal ink, **solid forest‑green + terracotta**
+- **Type:** Bricolage Grotesque (display) · Schibsted Grotesk (body/UI — a
+  newspaper grotesque built for editorial media) · Newsreader italic (serif
+  accent voice for asides and quotes) · JetBrains Mono (labels & metrics) —
+  distinctive, non‑generic.
+- **Palette:** alabaster paper, charcoal ink, **solid forest‑green + terracotta**
   accents (no gradients). Light theme only.
-- **Motion:** staggered headline reveal, card hover‑lift, list enter/exit and a
-  shortlist "pop" (Framer Motion), all respecting `prefers-reduced-motion`.
+- **Print details:** subtle paper‑grain overlay, hairline & double ledger
+  rules, crisp *offset* ink shadows (no blurry glows), index numbering on
+  cards and shortlist rows, terracotta `::selection`.
+- **Motion:** staggered headline reveal (with one italic‑serif accent word),
+  card hover‑lift, list enter/exit and a shortlist "pop" (Framer Motion), all
+  respecting `prefers-reduced-motion`.
+- **Micro‑UX:** press `/` anywhere to jump to search; platform tabs show
+  per‑platform profile counts; the drawer locks background scroll and moves
+  focus into the dialog.
 - **Detail page:** stat cards, a hand‑built SVG **follower‑growth chart** with an
   interactive tooltip, and a **topic‑tags** section (for profiles that have that
-  data).
+  data). Creators without deep data get **modeled estimates** instead of an
+  empty page — marked "≈ est." with a dashed trend line and an explanatory
+  footnote (see *Assumptions & trade‑offs*).
 
 Design tokens are CSS variables in `src/index.css`; base element rules live in
 `@layer base` so Tailwind utilities always win (this fixed an invisible
@@ -161,11 +176,15 @@ ink‑on‑ink button).
 
 - **Only 6 of 30 profiles have deep data.** The dataset ships detail JSON
   (posts, follower history, top topics) for just 6 creators; the rest only have
-  summary metrics. Rather than fabricate numbers, summary‑only profiles show
-  their real metrics plus a small "limited dataset" note.
+  summary metrics. For those, the detail page shows **clearly‑labeled
+  estimates** ("≈ est.", dashed chart line): per‑post averages and a growth
+  trend modeled deterministically (seeded by `user_id`) from the profile's
+  *real* follower count and engagement rate — never presented as measured
+  data.
 - **Several image URLs are dead.** Some avatar URLs (notably a few YouTube
-  channels) return 404 or are hotlink‑blocked. These fall back to a clean
-  initials monogram; I chose not to edit the provided data to swap them.
+  channels) return 404 or are hotlink‑blocked. Failed avatars are retried
+  through **unavatar.io** (resolves a fresh picture from the platform handle)
+  and only then fall back to an initials monogram.
 - **No search debounce.** The dataset is tiny and in‑memory, so filtering on
   each keystroke is instant; a debounce would add complexity for no gain.
 - **Light theme only.** A dark mode was prototyped then removed to keep the
@@ -175,10 +194,8 @@ ink‑on‑ink button).
 
 ## Possible improvements
 
-- Deploy to Vercel and add the live link above.
 - Unit tests for the shortlist store (add / dedupe / remove / persist).
 - A formal accessibility audit (colour‑contrast / tab‑order).
-- Fetch fresh avatar URLs (or proxy them) to recover the broken images.
 
 ---
 

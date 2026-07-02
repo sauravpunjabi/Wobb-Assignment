@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 /*
-  Influencer Search — warm editorial design system (light only).
-  Alabaster canvas, charcoal ink, solid forest-green + terracotta accents.
+  Influencer Search — warm editorial "printed index" design system (light only).
+  Alabaster paper, charcoal ink, solid forest-green + terracotta accents.
+  Print details: paper grain, hairline rules, crisp offset shadows (no blur,
+  no gradients).
 */
 :root {
   color-scheme: light;
-  --bg: #faf8f5; /* Warm Alabaster Canvas */
+  --bg: #faf8f5; /* Warm Alabaster Paper */
   --surface: #ffffff;
   --surface-2: #f3f0e9; /* Warm muted fill */
   --border: #e2ddd5; /* Crisp tactile borders */
@@ -18,7 +20,8 @@
   --accent-contrast: #ffffff;
   --accent-alt: #a34a33; /* Terracotta Rust */
   --accent-alt-soft: #f9efea;
-  --card-shadow: 0 22px 40px rgba(28, 29, 26, 0.13);
+  /* Crisp print-press offset — a hard ink block, never a blurry glow. */
+  --shadow-press: 6px 6px 0 0 rgba(28, 29, 26, 0.12);
 }
 
 /*
@@ -43,9 +46,26 @@
     min-height: 100vh;
     background: var(--bg);
     color: var(--text);
-    font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.6;
+  }
+
+  /* Paper grain — a fixed, non-interactive noise wash over the whole page. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+  }
+
+  ::selection {
+    background: var(--accent-alt);
+    color: var(--bg);
   }
 
   h1,
@@ -57,6 +77,7 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text);
+    text-wrap: balance;
   }
 
   #root {
@@ -80,10 +101,69 @@
   font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
 }
 .font-body {
-  font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
 }
 .font-meta {
   font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+/* Editorial accent — an italic serif voice for asides, quotes and emphasis. */
+.font-editorial {
+  font-family: "Newsreader", Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
+
+/* ---- Print details ------------------------------------------------------ */
+
+/* Double hairline rule, like a ledger section divider. */
+.rule-double {
+  position: relative;
+  border-top: 1.5px solid var(--text);
+}
+.rule-double::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Hollow ink digits (404 page). */
+.text-outline {
+  -webkit-text-stroke: 2.5px var(--text);
+  color: transparent;
+}
+
+/* Keyboard hint chip. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Slim ledger scrollbar (shortlist drawer). */
+.scroll-ledger {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scroll-ledger::-webkit-scrollbar {
+  width: 10px;
+}
+.scroll-ledger::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border: 3px solid var(--surface);
+  border-radius: 8px;
 }
 
 /* ---- Motion ------------------------------------------------------------ */
@@ -95,18 +175,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes heartpop {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.35);
-  }
-  100% {
-    transform: scale(1);
   }
 }
 

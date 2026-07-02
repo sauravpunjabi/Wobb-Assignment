@@ -14,28 +14,38 @@ import { VerifiedBadge } from "./VerifiedBadge";
 interface ProfileCardProps {
   profile: UserProfileSummary;
   platform: Platform;
+  /** Position in the current result list — printed as a ledger number. */
+  index?: number;
 }
 
 export const ProfileCard = memo(function ProfileCard({
   profile,
   platform,
+  index,
 }: ProfileCardProps) {
   const identifier = getProfileIdentifier(profile);
 
   return (
-    <article className="group relative flex h-full flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-[var(--text)] hover:shadow-[var(--card-shadow)]">
+    <article className="group relative flex h-full flex-col rounded border border-[var(--border)] bg-[var(--surface)] p-5 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--text)] hover:shadow-[var(--shadow-press)]">
       {/* Stretched link — whole card navigates, keyboard-focusable */}
       <Link
         to={`/profile/${identifier}?platform=${platform}`}
         aria-label={`View ${profile.fullname}'s profile`}
-        className="absolute inset-0 z-[1] rounded-xl"
+        className="absolute inset-0 z-[1] rounded"
       />
 
-      {/* Top row */}
+      {/* Top row — ledger number, platform stamp, shortlist action */}
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex rounded-sm bg-[var(--surface-2)] px-2 py-1 font-meta text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-          {getPlatformLabel(platform)}
-        </span>
+        <div className="flex items-center gap-2">
+          {index !== undefined && (
+            <span className="font-meta text-[10px] font-extrabold tracking-widest text-[var(--accent-alt)] tabular-nums">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+          )}
+          <span className="inline-flex rounded-sm bg-[var(--surface-2)] px-2 py-1 font-meta text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+            {getPlatformLabel(platform)}
+          </span>
+        </div>
         <div className="relative z-[2]">
           <ShortlistButton profile={profile} platform={platform} />
         </div>
@@ -46,6 +56,8 @@ export const ProfileCard = memo(function ProfileCard({
         <Avatar
           src={profile.picture}
           name={profile.fullname}
+          platform={platform}
+          handle={getProfileHandle(profile)}
           className="h-16 w-16"
           textClassName="text-xl"
         />
@@ -63,7 +75,7 @@ export const ProfileCard = memo(function ProfileCard({
       {/* Stats */}
       <div className="mt-auto flex items-end justify-between border-t border-[var(--border)] pt-4">
         <div>
-          <p className="font-display text-2xl font-bold leading-none">
+          <p className="font-display text-2xl font-bold leading-none tabular-nums">
             {formatCompactNumber(profile.followers)}
           </p>
           <p className="mt-1 font-meta text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
@@ -71,7 +83,7 @@ export const ProfileCard = memo(function ProfileCard({
           </p>
         </div>
         <div className="text-right">
-          <p className="font-display text-2xl font-bold leading-none text-[var(--accent-alt)]">
+          <p className="font-display text-2xl font-bold leading-none text-[var(--accent-alt)] tabular-nums">
             {formatEngagementRate(profile.engagement_rate)}
           </p>
           <p className="mt-1 font-meta text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
